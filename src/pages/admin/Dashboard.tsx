@@ -1,10 +1,22 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import AdminNavbar from '@/components/AdminNavbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { usePosts } from '@/hooks/usePosts';
-import { FileText, Eye, MessageCircle, TrendingUp, PlusCircle } from 'lucide-react';
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import AdminNavbar from "@/components/AdminNavbar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { usePosts } from "@/hooks/usePosts";
+import {
+  FileText,
+  Eye,
+  MessageCircle,
+  TrendingUp,
+  PlusCircle,
+} from "lucide-react";
 
 const Dashboard = () => {
   const { posts, getPosts } = usePosts();
@@ -13,48 +25,57 @@ const Dashboard = () => {
     getPosts();
   }, []);
 
-  const totalComments = posts.reduce((acc, post) => acc + post.comments.length, 0);
+  const totalComments = posts.reduce(
+    (acc, p) => acc + (p.comments?.length || 0),
+    0
+  );
 
   const stats = [
     {
-      title: 'Total Posts',
+      title: "Total Posts",
       value: posts.length,
       icon: FileText,
-      description: 'Published articles',
-      color: 'text-primary',
+      description: "Published articles",
+      color: "text-primary",
     },
     {
-      title: 'Total Views',
+      title: "Total Views",
       value: posts.length * 123,
       icon: Eye,
-      description: 'Across all posts',
-      color: 'text-accent',
+      description: "Across all posts",
+      color: "text-accent",
     },
     {
-      title: 'Comments',
+      title: "Comments",
       value: totalComments,
       icon: MessageCircle,
-      description: 'User engagements',
-      color: 'text-primary',
+      description: "User engagements",
+      color: "text-primary",
     },
     {
-      title: 'Engagement',
-      value: `${totalComments > 0 ? Math.round((totalComments / posts.length) * 100) : 0}%`,
+      title: "Engagement",
+      value: `${
+        totalComments > 0
+          ? Math.round((totalComments / Math.max(1, posts.length)) * 100)
+          : 0
+      }%`,
       icon: TrendingUp,
-      description: 'Average rate',
-      color: 'text-accent',
+      description: "Average rate",
+      color: "text-accent",
     },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <AdminNavbar />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's your blog overview.</p>
+            <p className="text-muted-foreground">
+              Welcome back! Here's your blog overview.
+            </p>
           </div>
           <Link to="/admin/posts/create">
             <Button className="gap-2">
@@ -64,34 +85,42 @@ const Dashboard = () => {
           </Link>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {stats.map((stat, index) => (
-            <Card key={index} className="card-hover-effect">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+          {stats.map((stat, i) => (
+            <Card
+              key={i}
+              className="card-hover-effect flex flex-col items-center text-center py-6"
+            >
+              <CardHeader className="flex flex-col items-center justify-center pb-2">
+                <stat.icon className={`h-10 w-10 mb-3 ${stat.color}`} />
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </CardHeader>
-              <CardContent>
+
+              <CardContent className="flex flex-col items-center">
                 <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {stat.description}
+                </p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Recent Posts */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Recent Posts</CardTitle>
-                <CardDescription>Your latest published articles</CardDescription>
+                <CardDescription>
+                  Your latest published articles
+                </CardDescription>
               </div>
               <Link to="/admin/posts">
-                <Button variant="outline" size="sm">View All</Button>
+                <Button variant="outline" size="sm">
+                  View All
+                </Button>
               </Link>
             </div>
           </CardHeader>
@@ -106,8 +135,11 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {posts.slice(0, 5).map(post => (
-                  <div key={post.id} className="flex items-center gap-4 p-4 rounded-lg border hover:bg-accent/50 transition-colors">
+                {posts.slice(0, 5).map((post) => (
+                  <div
+                    key={post.id}
+                    className="flex items-center gap-4 p-4 rounded-lg border hover:bg-accent/50 transition-colors"
+                  >
                     <img
                       src={post.image}
                       alt={post.title}
@@ -116,11 +148,14 @@ const Dashboard = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate">{post.title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(post.createdAt).toLocaleDateString()} • {post.comments.length} comments
+                        {new Date(post.createdAt).toLocaleDateString()} •{" "}
+                        {post.comments?.length || 0} comments
                       </p>
                     </div>
                     <Link to={`/admin/posts/edit/${post.id}`}>
-                      <Button variant="outline" size="sm">Edit</Button>
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
                     </Link>
                   </div>
                 ))}

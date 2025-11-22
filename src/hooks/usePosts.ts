@@ -1,126 +1,183 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
-import { setPosts, addPost as addPostAction, updatePost as updatePostAction, deletePost as deletePostAction, addComment as addCommentAction, setLoading, setError } from '@/store/slices/postsSlice';
-import { Post, Comment } from '@/store/slices/postsSlice';
-import { toast } from '@/hooks/use-toast';
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import axios from "axios";
+import {
+  setPosts,
+  addPost as addPostAction,
+  updatePost as updatePostAction,
+  deletePost as deletePostAction,
+  addComment as addCommentAction,
+  setLoading,
+  setError,
+  Post,
+  Comment,
+} from "@/store/slices/postsSlice";
+import { toast } from "@/hooks/use-toast";
 
-// Mock data generator
-const generateMockPosts = (): Post[] => {
-  const categories = ['Technology', 'Design', 'Business', 'Lifestyle', 'Travel'];
-  const authors = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Williams'];
-  
-  return Array.from({ length: 12 }, (_, i) => ({
-    id: (i + 1).toString(),
-    title: `Amazing Blog Post Title ${i + 1}`,
-    content: `<p>This is the full content of blog post ${i + 1}. It contains rich text with <strong>bold text</strong>, <em>italic text</em>, and <u>underlined text</u>.</p><p>Here's another paragraph with more details about this amazing topic. The content is engaging and informative.</p><h2>Key Takeaways</h2><ul><li>Point number one</li><li>Point number two</li><li>Point number three</li></ul><p>In conclusion, this blog post demonstrates the power of our blogging platform.</p>`,
-    excerpt: `A brief excerpt of blog post ${i + 1} to give readers a taste of what's inside...`,
-    image: `https://picsum.photos/seed/${i + 1}/800/400`,
-    category: categories[i % categories.length],
-    author: authors[i % authors.length],
-    createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-    comments: [],
-  }));
-};
+const API_BASE = "https://jsonplaceholder.typicode.com";
 
 export const usePosts = () => {
   const dispatch = useDispatch();
-  const { posts, loading, error } = useSelector((state: RootState) => state.posts);
+  const { posts, loading, error } = useSelector((s: RootState) => s.posts);
 
   const getPosts = async () => {
     try {
       dispatch(setLoading(true));
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Initialize with mock data if empty
-      if (posts.length === 0) {
-        const mockPosts = generateMockPosts();
-        dispatch(setPosts(mockPosts));
-      } else {
-        dispatch(setLoading(false));
-      }
+      const [postsRes, usersRes, photosRes, commentsRes, todosRes] =
+        await Promise.all([
+          axios.get(`${API_BASE}/posts?_limit=100`),
+          axios.get(`${API_BASE}/users`),
+          axios.get(`${API_BASE}/photos?_limit=500`),
+          axios.get(`${API_BASE}/comments`),
+          axios.get(`${API_BASE}/todos`),
+        ]);
+
+      const postsData = postsRes.data as any[];
+      const users = usersRes.data as any[];
+      const photos = photosRes.data as any[];
+      const comments = commentsRes.data as any[];
+      const todos = todosRes.data as any[];
+
+      const mapped: Post[] = postsData.map((p) => {
+        const user = users.find((u) => u.id === p.userId) || null;
+        const photo = photos.find((ph) => ph.id === p.id) || null;
+        const postComments = comments
+          .filter((c) => c.postId === p.id)
+          .map((c) => ({
+            id: String(c.id),
+            postId: String(c.postId),
+            author: c.email || c.name || "User",
+            content: c.body,
+            createdAt: new Date().toISOString(),
+          }));
+
+        const userTodos = todos.filter((t) => t.userId === p.userId);
+
+        return {
+          id: String(p.id),
+          title: p.title,
+          content: `<p>${p.body}</p>`,
+          excerpt: p.body.slice(0, 120) + (p.body.length > 120 ? "..." : ""),
+          image: photo?.url || `https://picsum.photos/seed/${p.id}/800/400`,
+          category: "General",
+          author: user?.name || "API User",
+          createdAt: new Date().toISOString(),
+          comments: postComments,
+          user,
+          photo: photo
+            ? { url: photo.url, thumbnailUrl: photo.thumbnailUrl }
+            : null,
+          todos: userTodos,
+        } as Post;
+      });
+
+      // Keep local posts (id >= 1000) at top so user-created posts persist in UI
+      const localPosts = posts.filter((p) => {
+        const numeric = Number(p.id);
+        return isNaN(numeric) ? true : numeric >= 1000;
+      });
+
+      dispatch(setPosts([...localPosts, ...mapped]));
     } catch (err) {
-      dispatch(setError('Failed to fetch posts'));
+      dispatch(setError("Failed to fetch posts"));
       toast({
         title: "Error",
         description: "Failed to load posts",
         variant: "destructive",
       });
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
-  const addPost = async (post: Omit<Post, 'id' | 'comments'>) => {
+  const addPost = async (post: Omit<Post, "id" | "comments">) => {
     try {
       dispatch(setLoading(true));
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      // simulate API create (returns id 101..)
+      const res = await axios.post(`${API_BASE}/posts`, {
+        title: post.title,
+        body: post.content.replace(/<[^>]+>/g, ""), // store plain body in API mock
+      });
+
+      const newId = String(Number(res.data.id) + 1000 || Date.now() + 1000);
+
       const newPost: Post = {
         ...post,
-        id: Date.now().toString(),
+        id: newId,
         comments: [],
       };
-      
+
       dispatch(addPostAction(newPost));
-      toast({
-        title: "Success!",
-        description: "Post created successfully",
-      });
+      toast({ title: "Success!", description: "Post created successfully" });
       return { success: true, post: newPost };
     } catch (err) {
-      dispatch(setError('Failed to create post'));
+      dispatch(setError("Failed to create post"));
       toast({
         title: "Error",
         description: "Failed to create post",
         variant: "destructive",
       });
       return { success: false };
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
   const updatePost = async (post: Post) => {
     try {
       dispatch(setLoading(true));
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      // If post is original API (id <= 100) call PUT, otherwise update local only
+      const numeric = Number(post.id);
+      if (!isNaN(numeric) && numeric <= 100) {
+        await axios.put(`${API_BASE}/posts/${post.id}`, {
+          title: post.title,
+          body: post.content.replace(/<[^>]+>/g, ""),
+        });
+      }
       dispatch(updatePostAction(post));
-      toast({
-        title: "Success!",
-        description: "Post updated successfully",
-      });
+      toast({ title: "Success!", description: "Post updated successfully" });
       return { success: true };
     } catch (err) {
-      dispatch(setError('Failed to update post'));
+      dispatch(setError("Failed to update post"));
       toast({
         title: "Error",
         description: "Failed to update post",
         variant: "destructive",
       });
       return { success: false };
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
   const deletePost = async (id: string) => {
     try {
       dispatch(setLoading(true));
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      const numeric = Number(id);
+      if (!isNaN(numeric) && numeric <= 100) {
+        await axios.delete(`${API_BASE}/posts/${id}`);
+      }
       dispatch(deletePostAction(id));
-      toast({
-        title: "Success!",
-        description: "Post deleted successfully",
-      });
+      toast({ title: "Success!", description: "Post deleted successfully" });
       return { success: true };
     } catch (err) {
-      dispatch(setError('Failed to delete post'));
+      dispatch(setError("Failed to delete post"));
       toast({
         title: "Error",
         description: "Failed to delete post",
         variant: "destructive",
       });
       return { success: false };
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
-  const addComment = async (postId: string, author: string, content: string) => {
+  const addComment = async (
+    postId: string,
+    author: string,
+    content: string
+  ) => {
     try {
       const comment: Comment = {
         id: Date.now().toString(),
@@ -129,7 +186,7 @@ export const usePosts = () => {
         content,
         createdAt: new Date().toISOString(),
       };
-      
+      // You can POST to /comments to simulate but we'll keep comments local
       dispatch(addCommentAction(comment));
       toast({
         title: "Comment added!",

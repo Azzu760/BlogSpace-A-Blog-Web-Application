@@ -1,29 +1,33 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { usePosts } from '@/hooks/usePosts';
-import PublicNavbar from '@/components/PublicNavbar';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Calendar, User, ArrowLeft, MessageCircle } from 'lucide-react';
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { usePosts } from "@/hooks/usePosts";
+import PublicNavbar from "@/components/PublicNavbar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Calendar, User, ArrowLeft, MessageCircle } from "lucide-react";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
 
 const commentSchema = Yup.object({
-  author: Yup.string().required('Name is required').min(2, 'Name must be at least 2 characters'),
-  content: Yup.string().required('Comment is required').min(10, 'Comment must be at least 10 characters'),
+  author: Yup.string()
+    .required("Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  content: Yup.string()
+    .required("Comment is required")
+    .min(10, "Comment must be at least 10 characters"),
 });
 
 const PostDetail = () => {
   const { id } = useParams();
   const { posts, addComment } = usePosts();
-  const [post, setPost] = useState(posts.find(p => p.id === id));
+  const [post, setPost] = useState(posts.find((p) => p.id === id));
 
   useEffect(() => {
-    const foundPost = posts.find(p => p.id === id);
+    const foundPost = posts.find((p) => p.id === id);
     setPost(foundPost);
   }, [id, posts]);
 
@@ -44,15 +48,18 @@ const PostDetail = () => {
   return (
     <div className="min-h-screen">
       <PublicNavbar onSearch={() => {}} />
-      
+
       <article className="container mx-auto px-4 py-12 max-w-4xl">
-        <Link to="/" className="inline-flex items-center gap-2 text-primary hover:underline mb-6">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-primary hover:underline mb-6"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Link>
 
-        <Badge className="mb-4">{post.category}</Badge>
-        
+        <Badge className="mb-4 ml-4">{post.category}</Badge>
+
         <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
           {post.title}
         </h1>
@@ -64,11 +71,13 @@ const PostDetail = () => {
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            <span>{new Date(post.createdAt).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}</span>
+            <span>
+              {new Date(post.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <MessageCircle className="h-4 w-4" />
@@ -76,7 +85,7 @@ const PostDetail = () => {
           </div>
         </div>
 
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-12">
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-12 border">
           <img
             src={post.image}
             alt={post.title}
@@ -84,7 +93,7 @@ const PostDetail = () => {
           />
         </div>
 
-        <div 
+        <div
           className="prose prose-lg dark:prose-invert max-w-none mb-16"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
@@ -102,7 +111,7 @@ const PostDetail = () => {
           <Card className="p-6 mb-8">
             <h3 className="text-xl font-semibold mb-4">Leave a Comment</h3>
             <Formik
-              initialValues={{ author: '', content: '' }}
+              initialValues={{ author: "", content: "" }}
               validationSchema={commentSchema}
               onSubmit={async (values, { resetForm }) => {
                 await addComment(post.id, values.author, values.content);
@@ -116,26 +125,38 @@ const PostDetail = () => {
                       as={Input}
                       name="author"
                       placeholder="Your Name"
-                      className={errors.author && touched.author ? 'border-destructive' : ''}
+                      className={
+                        errors.author && touched.author
+                          ? "border-destructive"
+                          : ""
+                      }
                     />
                     {errors.author && touched.author && (
-                      <p className="text-destructive text-sm mt-1">{errors.author}</p>
+                      <p className="text-destructive text-sm mt-1">
+                        {errors.author}
+                      </p>
                     )}
                   </div>
-                  
+
                   <div>
                     <Field
                       as={Textarea}
                       name="content"
                       placeholder="Write your comment..."
                       rows={4}
-                      className={errors.content && touched.content ? 'border-destructive' : ''}
+                      className={
+                        errors.content && touched.content
+                          ? "border-destructive"
+                          : ""
+                      }
                     />
                     {errors.content && touched.content && (
-                      <p className="text-destructive text-sm mt-1">{errors.content}</p>
+                      <p className="text-destructive text-sm mt-1">
+                        {errors.content}
+                      </p>
                     )}
                   </div>
-                  
+
                   <Button type="submit">Post Comment</Button>
                 </Form>
               )}
@@ -149,7 +170,7 @@ const PostDetail = () => {
                 No comments yet. Be the first to comment!
               </p>
             ) : (
-              post.comments.map(comment => (
+              post.comments.map((comment) => (
                 <Card key={comment.id} className="p-6">
                   <div className="flex items-start gap-4">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">

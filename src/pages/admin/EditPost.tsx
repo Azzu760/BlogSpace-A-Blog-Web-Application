@@ -1,40 +1,53 @@
-import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import AdminNavbar from '@/components/AdminNavbar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePosts } from '@/hooks/usePosts';
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import { Loader2, Save } from 'lucide-react';
+import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import AdminNavbar from "@/components/AdminNavbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { usePosts } from "@/hooks/usePosts";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { Loader2, Save } from "lucide-react";
 
 const postSchema = Yup.object({
-  title: Yup.string().required('Title is required').min(10, 'Title must be at least 10 characters'),
-  excerpt: Yup.string().required('Excerpt is required').min(20, 'Excerpt must be at least 20 characters'),
-  image: Yup.string().url('Must be a valid URL').required('Image URL is required'),
-  category: Yup.string().required('Category is required'),
-  content: Yup.string().required('Content is required').min(50, 'Content must be at least 50 characters'),
+  title: Yup.string()
+    .required("Title is required")
+    .min(5, "Title must be at least 5 characters"),
+  excerpt: Yup.string()
+    .required("Excerpt is required")
+    .min(10, "Excerpt must be at least 10 characters"),
+  image: Yup.string()
+    .url("Must be a valid URL")
+    .required("Image URL is required"),
+  category: Yup.string().required("Category is required"),
+  content: Yup.string()
+    .required("Content is required")
+    .min(20, "Content must be at least 20 characters"),
 });
 
-const categories = ['Technology', 'Design', 'Business', 'Lifestyle', 'Travel'];
+const categories = ["Technology", "Design", "Business", "Lifestyle", "Travel"];
 
 const EditPost = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { posts, getPosts, updatePost } = usePosts();
-  
-  const post = posts.find(p => p.id === id);
 
   useEffect(() => {
-    if (posts.length === 0) {
-      getPosts();
-    }
+    if (posts.length === 0) getPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const post = posts.find((p) => p.id === id);
 
   if (!post) {
     return (
@@ -42,7 +55,7 @@ const EditPost = () => {
         <AdminNavbar />
         <div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-4xl font-bold mb-4">Post Not Found</h1>
-          <Button onClick={() => navigate('/admin/posts')}>Go Back</Button>
+          <Button onClick={() => navigate("/admin/posts")}>Go Back</Button>
         </div>
       </div>
     );
@@ -51,7 +64,7 @@ const EditPost = () => {
   return (
     <div className="min-h-screen bg-background">
       <AdminNavbar />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Card>
           <CardHeader>
@@ -63,7 +76,7 @@ const EditPost = () => {
                 title: post.title,
                 excerpt: post.excerpt,
                 image: post.image,
-                category: post.category,
+                category: post.category || categories[0],
                 content: post.content,
               }}
               validationSchema={postSchema}
@@ -72,11 +85,8 @@ const EditPost = () => {
                   ...post,
                   ...values,
                 });
-                
                 setSubmitting(false);
-                if (result.success) {
-                  navigate('/admin/posts');
-                }
+                if (result.success) navigate("/admin/posts");
               }}
             >
               {({ errors, touched, isSubmitting, setFieldValue, values }) => (
@@ -88,10 +98,16 @@ const EditPost = () => {
                       id="title"
                       name="title"
                       placeholder="Enter an engaging title..."
-                      className={errors.title && touched.title ? 'border-destructive' : ''}
+                      className={
+                        errors.title && touched.title
+                          ? "border-destructive"
+                          : ""
+                      }
                     />
                     {errors.title && touched.title && (
-                      <p className="text-destructive text-sm mt-1">{errors.title}</p>
+                      <p className="text-destructive text-sm mt-1">
+                        {errors.title}
+                      </p>
                     )}
                   </div>
 
@@ -101,11 +117,17 @@ const EditPost = () => {
                       as={Input}
                       id="excerpt"
                       name="excerpt"
-                      placeholder="A brief summary of your post..."
-                      className={errors.excerpt && touched.excerpt ? 'border-destructive' : ''}
+                      placeholder="A brief summary..."
+                      className={
+                        errors.excerpt && touched.excerpt
+                          ? "border-destructive"
+                          : ""
+                      }
                     />
                     {errors.excerpt && touched.excerpt && (
-                      <p className="text-destructive text-sm mt-1">{errors.excerpt}</p>
+                      <p className="text-destructive text-sm mt-1">
+                        {errors.excerpt}
+                      </p>
                     )}
                   </div>
 
@@ -117,14 +139,24 @@ const EditPost = () => {
                       name="image"
                       type="url"
                       placeholder="https://example.com/image.jpg"
-                      className={errors.image && touched.image ? 'border-destructive' : ''}
+                      className={
+                        errors.image && touched.image
+                          ? "border-destructive"
+                          : ""
+                      }
                     />
                     {errors.image && touched.image && (
-                      <p className="text-destructive text-sm mt-1">{errors.image}</p>
+                      <p className="text-destructive text-sm mt-1">
+                        {errors.image}
+                      </p>
                     )}
                     {values.image && !errors.image && (
                       <div className="mt-2">
-                        <img src={values.image} alt="Preview" className="max-h-48 rounded-lg" />
+                        <img
+                          src={values.image}
+                          alt="Preview"
+                          className="max-h-48 rounded-lg"
+                        />
                       </div>
                     )}
                   </div>
@@ -133,19 +165,31 @@ const EditPost = () => {
                     <Label htmlFor="category">Category *</Label>
                     <Select
                       value={values.category}
-                      onValueChange={(value) => setFieldValue('category', value)}
+                      onValueChange={(value) =>
+                        setFieldValue("category", value)
+                      }
                     >
-                      <SelectTrigger className={errors.category && touched.category ? 'border-destructive' : ''}>
+                      <SelectTrigger
+                        className={
+                          errors.category && touched.category
+                            ? "border-destructive"
+                            : ""
+                        }
+                      >
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     {errors.category && touched.category && (
-                      <p className="text-destructive text-sm mt-1">{errors.category}</p>
+                      <p className="text-destructive text-sm mt-1">
+                        {errors.category}
+                      </p>
                     )}
                   </div>
 
@@ -155,26 +199,31 @@ const EditPost = () => {
                       <ReactQuill
                         theme="snow"
                         value={values.content}
-                        onChange={(value) => setFieldValue('content', value)}
-                        className="bg-background"
+                        onChange={(val) => setFieldValue("content", val)}
                         modules={{
                           toolbar: [
-                            [{ header: [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ list: 'ordered' }, { list: 'bullet' }],
-                            ['link', 'image'],
-                            ['clean'],
+                            [{ header: [1, 2, false] }],
+                            ["bold", "italic", "underline"],
+                            [{ list: "ordered" }, { list: "bullet" }],
+                            ["link", "image"],
+                            ["clean"],
                           ],
                         }}
                       />
                     </div>
                     {errors.content && touched.content && (
-                      <p className="text-destructive text-sm mt-1">{errors.content}</p>
+                      <p className="text-destructive text-sm mt-1">
+                        {errors.content}
+                      </p>
                     )}
                   </div>
 
                   <div className="flex gap-4">
-                    <Button type="submit" disabled={isSubmitting} className="flex-1">
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-1"
+                    >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -190,7 +239,7 @@ const EditPost = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => navigate('/admin/posts')}
+                      onClick={() => navigate("/admin/posts")}
                     >
                       Cancel
                     </Button>

@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Comment {
   id: string;
@@ -9,6 +9,7 @@ export interface Comment {
 }
 
 export interface Post {
+  body: any;
   id: string;
   title: string;
   content: string;
@@ -18,6 +19,9 @@ export interface Post {
   author: string;
   createdAt: string;
   comments: Comment[];
+  user?: any; // optional raw user from JSONPlaceholder
+  photo?: { url?: string; thumbnailUrl?: string } | null;
+  todos?: any[]; // optional todos for the post's user
 }
 
 interface PostsState {
@@ -33,40 +37,46 @@ const initialState: PostsState = {
 };
 
 const postsSlice = createSlice({
-  name: 'posts',
+  name: "posts",
   initialState,
   reducers: {
-    setPosts: (state, action: PayloadAction<Post[]>) => {
+    setPosts(state, action: PayloadAction<Post[]>) {
       state.posts = action.payload;
       state.loading = false;
+      state.error = null;
     },
-    addPost: (state, action: PayloadAction<Post>) => {
+    addPost(state, action: PayloadAction<Post>) {
       state.posts.unshift(action.payload);
     },
-    updatePost: (state, action: PayloadAction<Post>) => {
-      const index = state.posts.findIndex(p => p.id === action.payload.id);
-      if (index !== -1) {
-        state.posts[index] = action.payload;
-      }
+    updatePost(state, action: PayloadAction<Post>) {
+      const idx = state.posts.findIndex((p) => p.id === action.payload.id);
+      if (idx !== -1) state.posts[idx] = action.payload;
     },
-    deletePost: (state, action: PayloadAction<string>) => {
-      state.posts = state.posts.filter(p => p.id !== action.payload);
+    deletePost(state, action: PayloadAction<string>) {
+      state.posts = state.posts.filter((p) => p.id !== action.payload);
     },
-    addComment: (state, action: PayloadAction<Comment>) => {
-      const post = state.posts.find(p => p.id === action.payload.postId);
-      if (post) {
-        post.comments.push(action.payload);
-      }
+    addComment(state, action: PayloadAction<Comment>) {
+      const post = state.posts.find((p) => p.id === action.payload.postId);
+      if (post) post.comments.push(action.payload);
     },
-    setLoading: (state, action: PayloadAction<boolean>) => {
+    setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
     },
-    setError: (state, action: PayloadAction<string | null>) => {
+    setError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
       state.loading = false;
     },
   },
 });
 
-export const { setPosts, addPost, updatePost, deletePost, addComment, setLoading, setError } = postsSlice.actions;
+export const {
+  setPosts,
+  addPost,
+  updatePost,
+  deletePost,
+  addComment,
+  setLoading,
+  setError,
+} = postsSlice.actions;
+
 export default postsSlice.reducer;

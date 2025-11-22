@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
     --background: 210 20% 98%;
@@ -43,7 +39,7 @@ All colors MUST be HSL.
     --hero-gradient-end: 217 75% 60%;
     --card-hover: 0 0% 100%;
     --shadow-soft: 215 25% 15%;
-    
+
     /* Admin colors */
     --admin-bg: 215 25% 15%;
     --admin-foreground: 210 20% 98%;
@@ -82,7 +78,7 @@ All colors MUST be HSL.
     --hero-gradient-end: 217 75% 50%;
     --card-hover: 215 25% 18%;
     --shadow-soft: 0 0% 0%;
-    
+
     --admin-bg: 215 30% 8%;
     --admin-foreground: 210 20% 98%;
   }
@@ -98,7 +94,12 @@ All colors MUST be HSL.
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-bold tracking-tight;
   }
 }

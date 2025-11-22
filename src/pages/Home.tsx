@@ -1,44 +1,64 @@
-import { useEffect, useState } from 'react';
-import { usePosts } from '@/hooks/usePosts';
-import PublicNavbar from '@/components/PublicNavbar';
-import BlogCard from '@/components/BlogCard';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { usePosts } from "@/hooks/usePosts";
+import PublicNavbar from "@/components/PublicNavbar";
+import BlogCard from "@/components/BlogCard";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 const POSTS_PER_PAGE = 6;
-const CATEGORIES = ['All', 'Technology', 'Design', 'Business', 'Lifestyle', 'Travel'];
+const CATEGORIES = [
+  "All",
+  "Technology",
+  "Design",
+  "Business",
+  "Lifestyle",
+  "Travel",
+];
 
 const Home = () => {
   const { posts, loading, getPosts } = usePosts();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
     getPosts();
-    const category = searchParams.get('filter');
+    const category = searchParams.get("filter");
     if (category) setSelectedCategory(category);
   }, []);
 
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
+  // UPDATED: search using real fields
+  const filteredPosts = posts.filter((post) => {
+    const searchable = `${post.title} ${post.body} ${
+      post.user?.name || ""
+    }`.toLowerCase();
+
+    const matchesSearch = searchable.includes(searchQuery.toLowerCase());
+
+    // MOCK CATEGORY since API has no categories
+    const id = Number(post.id) || 0;
+    const mockCategory = CATEGORIES[(id % (CATEGORIES.length - 1)) + 1];
+    const matchesCategory =
+      selectedCategory === "All" || mockCategory === selectedCategory;
+
     return matchesSearch && matchesCategory;
   });
 
   const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
   const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
-  const paginatedPosts = filteredPosts.slice(startIndex, startIndex + POSTS_PER_PAGE);
+  const paginatedPosts = filteredPosts.slice(
+    startIndex,
+    startIndex + POSTS_PER_PAGE
+  );
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setCurrentPage(1);
-    if (category !== 'All') {
+    if (category !== "All") {
       setSearchParams({ filter: category });
     } else {
       setSearchParams({});
@@ -48,7 +68,7 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       <PublicNavbar onSearch={setSearchQuery} />
-      
+
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-hero-start/20 to-hero-end/20" />
@@ -62,7 +82,8 @@ const Home = () => {
               Discover Amazing <span className="text-gradient">Stories</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Explore insightful articles, tutorials, and stories from passionate writers around the world.
+              Explore insightful articles, tutorials, and stories from
+              passionate writers around the world.
             </p>
           </div>
         </div>
@@ -71,10 +92,10 @@ const Home = () => {
       {/* Category Filter */}
       <section className="container mx-auto px-4 mb-8">
         <div className="flex flex-wrap gap-2 justify-center">
-          {CATEGORIES.map(category => (
+          {CATEGORIES.map((category) => (
             <Badge
               key={category}
-              variant={selectedCategory === category ? 'default' : 'outline'}
+              variant={selectedCategory === category ? "default" : "outline"}
               className="cursor-pointer px-4 py-2 transition-all hover:scale-105"
               onClick={() => handleCategoryChange(category)}
             >
@@ -99,12 +120,14 @@ const Home = () => {
           </div>
         ) : paginatedPosts.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-xl text-muted-foreground">No posts found. Try adjusting your filters.</p>
+            <p className="text-xl text-muted-foreground">
+              No posts found. Try adjusting your filters.
+            </p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {paginatedPosts.map(post => (
+              {paginatedPosts.map((post) => (
                 <BlogCard key={post.id} post={post} />
               ))}
             </div>
@@ -115,27 +138,29 @@ const Home = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                
+
                 {[...Array(totalPages)].map((_, i) => (
                   <Button
                     key={i}
-                    variant={currentPage === i + 1 ? 'default' : 'outline'}
+                    variant={currentPage === i + 1 ? "default" : "outline"}
                     size="icon"
                     onClick={() => setCurrentPage(i + 1)}
                   >
                     {i + 1}
                   </Button>
                 ))}
-                
+
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   <ChevronRight className="h-4 w-4" />
