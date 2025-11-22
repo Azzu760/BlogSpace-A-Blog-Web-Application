@@ -45,7 +45,7 @@ const ViewPost = () => {
       <article className="container mx-auto px-4 py-12 max-w-4xl">
         {/* Back Button */}
         <Link
-          to="/posts"
+          to="/admin/posts"
           className="inline-flex items-center gap-2 text-primary hover:underline mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
